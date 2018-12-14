@@ -413,8 +413,10 @@ def dehaze_all(inp_dir = './haze_image',out_dir = './out'):
 
 
 def dehaze_single(inp_file = './haze_image/2230089563_06d4982122_z.jpg',out_file = './out/out_2230089563_06d4982122_z.jpg'):
-    
-    model_file = './model/comp_c_tpartition_30comp_2A.h5'
+
+    base_dir=os.path.dirname(os.path.realpath(__file__))
+   
+    model_file =base_dir+'/./model/comp_c_tpartition_30comp_2A.h5'
 
     patch_X = 10
     patch_Y = 10
@@ -460,4 +462,4 @@ def dehaze_single(inp_file = './haze_image/2230089563_06d4982122_z.jpg',out_file
 
 
 
-dehaze_single()
+dehaze_single(inp_file=sys.argv[1],out_file=sys.argv[2])
