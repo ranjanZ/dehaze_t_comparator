@@ -202,7 +202,7 @@ def dehaze_comp2(im, A, comp_model, patch_X, patch_Y, stride_X, stride_Y,
     t_est = np.clip(t_est, 0, 1)
     
     # interpolate t
-    t_interp = t_interp_laplacian(t_est, conf, im)
+    t_interp = t_interp_laplacian(t_est, conf, im,alpha)
 
     # recover
     A = A.reshape((1, 1, 3))
@@ -325,7 +325,7 @@ def comp_patches(comparator, p1, p2):
     return (a, b)
 
 
-def t_interp_laplacian(t_est, conf, im):
+def t_interp_laplacian(t_est, conf, im,alpha):
     '''
     interpolate the t_est
     '''
@@ -348,12 +348,10 @@ def t_interp_laplacian(t_est, conf, im):
     return t_interp
 
 
-if __name__ == '__main__':
-    inp_dir = './haze_image'
+def dehaze_all(inp_dir = './haze_image',out_dir = './out'):
     image_files = sorted(os.listdir(inp_dir))
     
     model_file = './model/comp_c_tpartition_30comp_2A.h5'
-    out_dir = './out'
 
     patch_X = 10
     patch_Y = 10
@@ -409,3 +407,57 @@ if __name__ == '__main__':
             skio.imsave(out_file_prefix+'_out.png', out_im_final)
             skio.imsave(out_file_prefix+'_t.png', t_out)
             skio.imsave(out_file_prefix+'_t_est.png', t_est)
+
+
+
+
+
+def dehaze_single(inp_file = './haze_image/2230089563_06d4982122_z.jpg',out_file = './out/out_2230089563_06d4982122_z.jpg'):
+    
+    model_file = './model/comp_c_tpartition_30comp_2A.h5'
+
+    patch_X = 10
+    patch_Y = 10
+    stride_X = patch_X/2
+    stride_Y = patch_Y/2
+    
+    var_thr = 0.02
+    edge_thr = 0.5
+
+    angle_thr = 10
+    angle_test_pixel_frac = 0.5
+    alpha = 0.1
+
+    start_t = 0
+    end_t = 1
+    step_tol = 0.0001
+
+    w_op = True
+
+    comp_model = load_model(model_file)
+
+
+    in_im = img_as_float(skio.imread(inp_file))
+
+    tic = time.clock()
+    A_comp = compute_A_DCP(in_im)
+    im = in_im
+    A = A_comp.reshape((1, 1, 3))
+    sys.stdout.write(' {} '.format(A))
+    (out_im, t_est, t_out) \
+        = dehaze_comp2(im, A, comp_model, patch_X, patch_Y,
+                       stride_X, stride_Y, var_thr, edge_thr,
+                       angle_thr, angle_test_pixel_frac,
+                       alpha, start_t, end_t, step_tol)
+
+    toc = time.clock()
+    print 'Runtime: {}'.format(toc - tic)
+    out_im_final = out_im
+    skio.imsave(out_file, out_im_final)
+    #skio.imsave(out_file_prefix+'_t.png', t_out)
+    #skio.imsave(out_file_prefix+'_t_est.png', t_est)
+
+
+
+
+dehaze_single()
